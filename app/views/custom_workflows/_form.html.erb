@@ -51,6 +51,7 @@
   <% case observable %>
   <% when :shared %>
     <%= f.text_area :shared_code, :cols => 40, :rows => 20, :wrap => 'off', :class => 'custom_workflow_script' %>
+
   <% when *CustomWorkflow::COLLECTION_OBSERVABLES %>
     <% collapsed = (not (@workflow.before_add.present? or @workflow.after_add.present? or @workflow.errors[:base].present?)) %>
     <fieldset class="collapsible <%= collapsed ? 'collapsed' : '' %>">
@@ -101,6 +102,7 @@
         </div>
       </div>
     </fieldset>
+
     <% collapsed = (not (@workflow.before_destroy.present? or @workflow.after_destroy.present?)) %>
     <fieldset class="collapsible <%= collapsed ? 'collapsed' : '' %>">
       <legend onclick="toggleFieldset(this);"><%= l(:label_destroy_workflows) %></legend>
@@ -115,6 +117,69 @@
         </div>
       </div>
     </fieldset>
+    <% if CustomWorkflow::CONTROLLER_OBSERVABLES.include?(observable)%>
+      <% collapsed = (not @workflow.after_action.present? ) %>
+      <fieldset class="collapsible <%= collapsed ? 'collapsed' : '' %>">
+        <legend onclick="toggleFieldset(this);"><%= l(:label_before_render_workflow) %></legend>
+        <div style="<%= collapsed ? 'display: none' : '' %>">
+          <br />
+          <div class="splitcontent">
+            <div class="splitcontentleft">
+              <%= f.text_area :after_action, :cols => 40, :rows => 20, :wrap => 'off', :class => 'custom_workflow_script' %>
+              <br/>
+              <br/>
+              <div class="splitcontent">
+                <div class="splitcontentleft">
+                  <%= f.submit l(:button_save) %>
+                </div>
+                <div class="splitcontentright">
+                  <%= link_to 'Custom Workflows INDEX', custom_workflows_path , :data => {:confirm => 'Are you sure?'}%>
+                </div>
+              </div>
+              <br/>
+              <br/>
+            </div>
+            <div class="splitcontentright">
+              <table class="list custom_fields">
+                <%= ["Already attached", observable.to_s.camelize, "Custom Fields"].join(" ")%>
+                <thead><tr>
+                  <th><%=l(:field_id)%></th>
+                  <th><%=l(:field_name)%></th>
+                  <th><%=l(:field_field_format)%></th>
+                  <th><%=l(:field_is_required)%></th>
+                  <% custom_field_type = observable.to_s.camelize << "CustomField"%>
+                  <% if custom_field_type == 'IssueCustomField' %>
+                    <th><%=l(:field_is_for_all)%></th>
+                    <th><%=l(:label_used_by)%></th>
+                  <% end %>
+                  <th></th>
+                </tr></thead>
+                <tbody>
+                <% (custom_fields || []).sort.each do |custom_field| -%>
+                  <tr>
+                    <td><%= custom_field.id %></td>
+                    <td class="name"><%= link_to custom_field.name, edit_custom_field_path(custom_field) %></td>
+                    <td><%= l(custom_field.format.label) %></td>
+                    <td><%= checked_image custom_field.is_required? %></td>
+                    <% if custom_field_type == 'IssueCustomField' %>
+                    <td><%= checked_image custom_field.is_for_all? %></td>
+                    <td><%= l(:label_x_projects, :count => custom_fields_projects_count[custom_field.id] || 0) if custom_field.is_a? IssueCustomField and !custom_field.is_for_all? %></td>
+                    <% end %>
+                    <td class="buttons">
+                      <%= reorder_handle(custom_field, :url => custom_field_path(custom_field), :param => 'custom_field') %>
+                      <%= delete_link custom_workflow_destroy_custom_field_path(custom_field) %>
+                    </td>
+                  </tr>
+                <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+    <%end%>
+        
+
   <% end %>
 </fieldset>
 
@@ -126,4 +191,8 @@
 
 <% content_for :header_tags do %>
     <%= javascript_include_tag 'tab_override', plugin: 'redmine_custom_workflows' %>
+<% end %>
+
+<%= javascript_tag do %>
+  $(function() { $("table.custom_fields tbody").positionedItems(); });
 <% end %>

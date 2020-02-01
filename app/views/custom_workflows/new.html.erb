@@ -3,8 +3,8 @@
 <%= error_messages_for 'workflow' %>
 
 <%= labelled_form_for @workflow do |f| %>
-<%= render :partial => 'form', :locals => {:f => f} %>
-<%= submit_tag l(:button_create) %>
+<%= render partial: 'form', locals: {f: f, custom_fields: @custom_fields, custom_fields_projects_count: @custom_fields_projects_count} %>
+
 <% end %>
 
 <% html_title(l(:label_custom_workflow_plural), l(:label_custom_workflow_new), l(:label_administration)) -%>

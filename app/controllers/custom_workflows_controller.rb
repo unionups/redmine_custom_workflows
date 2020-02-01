@@ -25,6 +25,7 @@ class CustomWorkflowsController < ApplicationController
   layout 'admin'
   before_action :require_admin
   before_action :find_workflow, only: [:show, :edit, :update, :destroy, :export, :change_status, :reorder]
+  # before_action :find_custom_fields, only: [:new, :edit]
 
   def reorder
     from = @workflow.position
@@ -73,6 +74,7 @@ class CustomWorkflowsController < ApplicationController
   def new
     @workflow = CustomWorkflow.new
     @workflow.author = cookies[:custom_workflows_author]
+
     respond_to do |format|
       format.html
     end
@@ -115,12 +117,14 @@ class CustomWorkflowsController < ApplicationController
     @workflow.after_remove = params[:custom_workflow][:after_remove]
     @workflow.before_destroy = params[:custom_workflow][:before_destroy]
     @workflow.after_destroy = params[:custom_workflow][:after_destroy]
+    @workflow.after_action = params[:custom_workflow][:after_action]
     @workflow.project_ids = params[:custom_workflow][:project_ids]
     respond_to do |format|
       if params.has_key?(:commit) && @workflow.save
         flash[:notice] = l(:notice_successful_create)
         cookies[:custom_workflows_author] = @workflow.author
-        format.html { redirect_to(custom_workflows_path) }
+        # format.html { redirect_to(custom_workflows_path) }
+        format.html { redirect_to request.referrer }
       else
         format.html { render action: :new }
       end
@@ -154,10 +158,12 @@ class CustomWorkflowsController < ApplicationController
       @workflow.after_remove = params[:custom_workflow][:after_remove]
       @workflow.before_destroy = params[:custom_workflow][:before_destroy]
       @workflow.after_destroy = params[:custom_workflow][:after_destroy]
+      @workflow.after_action = params[:custom_workflow][:after_action]
       @workflow.project_ids = params[:custom_workflow][:project_ids]
       if params.has_key?(:commit) && @workflow.save
         flash[:notice] = l(:notice_successful_update)
-        format.html { redirect_to(custom_workflows_path) }
+        # format.html { redirect_to(custom_workflows_path) }
+        format.html { redirect_to request.referrer }
       else
         format.html { render action: :edit }
       end
@@ -172,12 +178,37 @@ class CustomWorkflowsController < ApplicationController
     end
   end
 
-  private
-
-  def find_workflow
-    @workflow = CustomWorkflow.find(params[:id])
-  rescue ActiveRecord::RecordNotFound
-    render_404
+  def destroy_custom_field
+    custom_field = CustomField.find(params[:id])
+    begin
+      if custom_field.destroy
+        flash[:notice] = l(:notice_successful_delete)
+      end
+    rescue
+      flash[:error] = l(:error_can_not_delete_custom_field)
+    end
+    redirect_to request.referrer
   end
 
+
+  private
+
+    def find_workflow
+      @workflow = CustomWorkflow.find(params[:id])
+    rescue ActiveRecord::RecordNotFound
+      render_404
+    end
+
+    def find_custom_fields
+      type = (@workflow.observable.camelize) << "CustomField"
+      @custom_fields = CustomField.where({type: type}).sorted
+      @custom_fields_projects_count =
+          IssueCustomField.where(is_for_all: false).joins(:projects).group(:custom_field_id).count if type == "IssueCustomField"
+    end
+
+    def render *args
+      find_custom_fields if [:edit, :new, :create].include?(action_name.to_sym)
+      super 
+    end
 end
+

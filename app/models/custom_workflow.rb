@@ -21,11 +21,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class CustomWorkflow < ActiveRecord::Base
-  OBSERVABLES = [:issue, :issue_attachments, :user, :attachment, :group, :group_users, :project, :project_attachments,
+  OBSERVABLES = [:issue, :issue_attachments, :user, :attachment, :group, :group_users, :project, :project_attachments, :document,
                  :wiki_content, :wiki_page_attachments, :time_entry, :version, :shared]
   PROJECT_OBSERVABLES = [:issue, :issue_attachments, :project, :project_attachments, :wiki_content, :wiki_page_attachments, :time_entry, :version]
   COLLECTION_OBSERVABLES = [:group_users, :issue_attachments, :project_attachments, :wiki_page_attachments]
-  SINGLE_OBSERVABLES = [:issue, :user, :group, :attachment, :project, :wiki_content, :time_entry, :version]
+  SINGLE_OBSERVABLES = [:issue, :user, :group, :attachment, :project, :wiki_content, :time_entry, :version, :document]
+  CONTROLLER_OBSERVABLES = [:issue, :user, :group, :project, :time_entry, :version, :document]
+  
 
   has_and_belongs_to_many :projects
   acts_as_list
@@ -109,7 +111,7 @@ class CustomWorkflow < ActiveRecord::Base
 
   def validate_syntax_for(object, event)
     object.instance_eval(read_attribute(event)) if respond_to?(event) && read_attribute(event)
-  rescue WorkflowError => _
+  # rescue WorkflowError => _
   rescue => e
     errors.add event, :invalid_script, error: e
   end
@@ -119,7 +121,7 @@ class CustomWorkflow < ActiveRecord::Base
       when :shared
         fields = [shared_code]
       when *SINGLE_OBSERVABLES
-        fields = [before_save, after_save, before_destroy, after_destroy]
+        fields = [before_save, after_save, before_destroy, after_destroy, after_action]
       when *COLLECTION_OBSERVABLES
         fields = [before_add, after_add, before_remove, after_remove]
       else
@@ -139,7 +141,7 @@ class CustomWorkflow < ActiveRecord::Base
         object = observable.camelize.constantize.new
         object.send :instance_variable_set, "@#{observable}", object # compatibility with 0.0.1
         CustomWorkflow.run_shared_code object
-        [:before_save, :after_save, :before_destroy, :after_destroy].each {|field| validate_syntax_for object, field}
+        [:before_save, :after_save, :before_destroy, :after_destroy, :after_action].each {|field| validate_syntax_for object, field}
       when *COLLECTION_OBSERVABLES
         object = nil
         case observable.to_sym
@@ -167,7 +169,7 @@ class CustomWorkflow < ActiveRecord::Base
 
   def export_as_xml
     only = [:author, :name, :description, :before_save, :after_save, :shared_code, :observable,
-            :before_add, :after_add, :before_remove, :after_remove, :before_destroy, :after_destroy, :created_at]
+            :before_add, :after_add, :before_remove, :after_remove, :before_destroy, :after_destroy, :after_action, :created_at]
     only = only.select { |p| self[p] }
     to_xml :only => only  do |xml|
       xml.tag! 'exported-at', Time.current.xmlschema

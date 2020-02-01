@@ -31,8 +31,8 @@ Redmine::Plugin.register :redmine_custom_workflows do
     author_url 'https://github.com/danmunn/redmine_custom_workflows/graphs/contributors'
   end
   author 'Anton Argirov/Karel Pičman'
-  description 'Allows to create custom workflows for objects, defined in the plain Ruby language'
-  version '1.0.2'
+  description 'Allows to create custom workflows and custom fields for objects, defined in the plain Ruby language'
+  version '1.0.2-extended'
 
   requires_redmine version_or_higher: '4.1.0'
 

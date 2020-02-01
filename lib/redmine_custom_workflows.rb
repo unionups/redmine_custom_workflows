@@ -24,8 +24,12 @@
 require 'redmine_custom_workflows/hooks/hooks'
 
 # Errors
-require 'redmine_custom_workflows/errors/workflow_error'
+require 'redmine_custom_workflows/concerns/custom_fields_helpers'
 
+# Concerns
+require 'active_support/concern'
+require 'redmine_custom_workflows/concerns/controller_patch'
+require 'redmine_custom_workflows/concerns/custom_fields_helpers'
 # Patches
 require 'redmine_custom_workflows/patches/attachment_patch'
 require 'redmine_custom_workflows/patches/group_patch'
@@ -37,3 +41,4 @@ require 'redmine_custom_workflows/patches/user_patch'
 require 'redmine_custom_workflows/patches/version_patch'
 require 'redmine_custom_workflows/patches/wiki_content_patch'
 require 'redmine_custom_workflows/patches/wiki_page_patch'
+require 'redmine_custom_workflows/patches/document_patch'

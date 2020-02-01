@@ -23,7 +23,6 @@
 module RedmineCustomWorkflows
   module Patches
     module IssuePatch
-
       def self.included(base)
         base.class_eval do
           before_save :before_save_custom_workflows
@@ -48,6 +47,12 @@ module RedmineCustomWorkflows
           end
         end
       end
+
+
+      include RedmineCustomWorkflows::Concerns::CustomFieldsHelpers
+      
+
+      private
 
         def validate_status
           return true unless @saved_attributes && @saved_attributes['status_id'] != status_id &&
@@ -83,7 +88,23 @@ module RedmineCustomWorkflows
         def after_destroy_custom_workflows
           CustomWorkflow.run_custom_workflows(:issue, self, :after_destroy)
         end
+    end
 
+    module IssuesControllerPatch
+      extend ActiveSupport::Concern
+      include RedmineCustomWorkflows::Concerns::ControllerPatch
+
+      included do 
+        # after_action :after_edit_action_custom_workflows , only: [:new, :edit]
+        private
+          def after_action_custom_workflows
+            CustomWorkflow.run_custom_workflows(:issue, @issue, :after_action)
+          end
+
+      end
+      # class_methods do
+        
+      # end
     end
   end
 end
@@ -91,3 +112,6 @@ end
 # Apply patch
 RedmineExtensions::PatchManager.register_model_patch 'Issue',
   'RedmineCustomWorkflows::Patches::IssuePatch'
+
+RedmineExtensions::PatchManager.register_controller_patch 'IssuesController',
+  'RedmineCustomWorkflows::Patches::IssuesControllerPatch'
