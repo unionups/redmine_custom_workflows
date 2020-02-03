@@ -24,7 +24,7 @@
 require 'redmine_custom_workflows/hooks/hooks'
 
 # Errors
-require 'redmine_custom_workflows/concerns/custom_fields_helpers'
+require 'redmine_custom_workflows/errors/workflow_error'
 
 # Concerns
 require 'active_support/concern'
