@@ -34,4 +34,5 @@ RedmineApp::Application.routes.draw do
   post '/custom_workflows/:id/change_status', :to => 'custom_workflows#change_status', :as => 'custom_workflow_status'
   put '/custom_workflows/:id/reorder', :to => 'custom_workflows#reorder'
   delete '/custom_workflows/custom_field/:id', :to => 'custom_workflows#destroy_custom_field', as: 'custom_workflow_destroy_custom_field'
+  match "users/:id/refresh", to: "users#refresh", as: :user_refresh, via: :all
 end

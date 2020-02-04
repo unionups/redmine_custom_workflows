@@ -6,7 +6,7 @@ module RedmineCustomWorkflows
         # after_action :after_edit_action_custom_workflows , only: [:new, :edit]
         private
           def render *args
-            after_action_custom_workflows if [:edit, :new, :settings].include?(action_name.to_sym)
+            after_action_custom_workflows if [:edit, :new, :settings, :refresh].include?(action_name.to_sym)
             super 
           end
       end

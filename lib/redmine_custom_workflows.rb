@@ -31,6 +31,7 @@ require 'active_support/concern'
 require 'redmine_custom_workflows/concerns/controller_patch'
 require 'redmine_custom_workflows/concerns/custom_fields_helpers'
 # Patches
+require 'redmine_custom_workflows/patches/custom_field_patch'
 require 'redmine_custom_workflows/patches/attachment_patch'
 require 'redmine_custom_workflows/patches/group_patch'
 require 'redmine_custom_workflows/patches/issue_patch'

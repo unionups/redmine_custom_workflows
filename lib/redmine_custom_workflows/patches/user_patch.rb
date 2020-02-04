@@ -68,11 +68,28 @@ module RedmineCustomWorkflows
       include RedmineCustomWorkflows::Concerns::ControllerPatch     
 
       included do 
+
+        def refresh
+          @user.safe_attributes = params[:user]
+          # @user.save
+          @auth_sources = AuthSource.all
+          @membership ||= Member.new
+          respond_to do |format|
+            format.html {
+              
+              # redirect_to  (edit_user_path(@user) << "?" << user_params.to_query)
+              render action: :edit#, location: edit_user_path(@user)
+            }
+          end
+        end
         # after_action :after_edit_action_custom_workflows , only: [:new, :edit]
         private
           def after_action_custom_workflows
             CustomWorkflow.run_custom_workflows(:user, @user, :after_action)
           end
+          # def user_params
+          #    params.permit!
+          # end
 
       end
       # class_methods do
